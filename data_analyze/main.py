@@ -22,11 +22,34 @@ else:
     print("No available matches in the given date range.")
     exit()
 
-# Process data
+# Get available leagues
+leagues = {}
+for match in matches:
+    league_code = match["competition"]["code"]
+    league_name = match["competition"]["name"]
+    leagues[league_code] = league_name
+
+# User selects a league
+while True:
+    print("\nAvailable leagues:")
+    for i, (code, name) in enumerate(leagues.items()):
+        print(f"{i + 1}. {name} ({code})")
+    try:
+        choice = int(input("Select a league by entering the corresponding number: "))
+        if 1 <= choice <= len(leagues):
+            selected_league_code = list(leagues.keys())[choice - 1]
+            selected_league_name = leagues[selected_league_code]
+            break
+        else:
+            print("Invalid choice. Please enter a valid number.")
+    except ValueError:
+        print("Invalid input. Please enter a number.")
+
+# Process data for selected league
 data_list = []
 teams_set = set()
 for match in matches:
-    if match["competition"]["code"] == "PD":  # Filter only La Liga matches
+    if match["competition"]["code"] == selected_league_code:
         if match["score"]["fullTime"]["home"] is not None and match["score"]["fullTime"]["away"] is not None:
             data_list.append({
                 "date": match["utcDate"],
@@ -45,16 +68,19 @@ df_scores = pd.DataFrame(data_list)
 # Convert date to readable format
 df_scores["date"] = pd.to_datetime(df_scores["date"])
 
-# Calculate average goals per match for the entire league
+# Calculate average goals per match for the selected league
 df_scores["total_goals"] = df_scores["home_score"] + df_scores["away_score"]
 df_scores["rolling_avg_goals"] = df_scores["total_goals"].rolling(window=5, min_periods=1).mean()
 
-# Plot average goals per match for the entire league
+# Print league goal statistics
+print(f"\nAverage goals per match in {selected_league_name} in the last 10 days: {df_scores['total_goals'].mean():.2f}")
+
+# Plot average goals per match for the selected league
 plt.figure(figsize=(10, 5))
-plt.plot(df_scores["date"], df_scores["rolling_avg_goals"], marker='o', linestyle='-', label="League Average Goals")
+plt.plot(df_scores["date"], df_scores["rolling_avg_goals"], marker='o', linestyle='-', label=f"{selected_league_name} Average Goals")
 plt.xlabel("Date")
 plt.ylabel("Average goals per match")
-plt.title("Goal trend for La Liga")
+plt.title(f"Goal trend for {selected_league_name}")
 plt.grid()
 plt.xticks(rotation=45)
 plt.legend()
@@ -62,7 +88,7 @@ plt.show()
 
 # Allow user to choose a team
 while True:
-    print("\nAvailable La Liga teams:")
+    print("\nAvailable teams in selected league:")
     for i, team in enumerate(teams_list):
         print(f"{i + 1}. {team}")
     try:
