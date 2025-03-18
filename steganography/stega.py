@@ -11,11 +11,10 @@ LOW_BITS = (1 << BITS) - 1
 BYTES_PER_BYTE = math.ceil(8 / BITS)
 FLAG = '%'
 
-
 def list_images(directory):
-    images = [f for f in os.listdir(directory) if f.endswith('.jpg') or f.endswith('.png') or f.endswith('.jpeg') or f.endswith('.bmp')]
+    images = [f for f in os.listdir(directory) if f.endswith(('.jpg', '.png', '.jpeg', '.bmp'))]
     if not images:
-        print("No JPG images found in the directory.")
+        print("No images found in the directory.")
         return None
 
     print("Available images:")
@@ -31,7 +30,6 @@ def list_images(directory):
                 print("Invalid selection. Try again.")
         except ValueError:
             print("Please enter a valid number.")
-
 
 def insert(img_path, msg):
     try:
@@ -51,21 +49,19 @@ def insert(img_path, msg):
             encode(data[idx * BYTES_PER_BYTE: (idx + 1) * BYTES_PER_BYTE], val)
 
         img = np.reshape(data, ori_shape)
-        filename, _ = path.splitext(img_path)
-        filename += '_lsb_embedded.png'
+        filename, ext = path.splitext(img_path)
+        filename += '_lsb_embedded' + ext
         cv2.imwrite(filename, img)
         print(f"Successfully embedded message into {filename}")
         return filename
     except Exception as e:
         print(f"Error: {e}")
 
-
 def encode(block, data):
     data = ord(data)
     for idx in range(len(block)):
         block[idx] &= HIGH_BITS
         block[idx] |= (data >> (BITS * idx)) & LOW_BITS
-
 
 def extract(img_path):
     try:
@@ -99,7 +95,6 @@ def extract(img_path):
         return extracted_msg
     except Exception as e:
         print(f"Error: {e}")
-
 
 if __name__ == '__main__':
     default_dir = "./assets"
