@@ -1,2 +1,7 @@
 .idea
 assets
+steganography/*.pdf
+steganography/yt_bot
+*.pdf
+*.sql
+yt_bot
